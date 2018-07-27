@@ -15,6 +15,7 @@ def load_hetrec_to_df(data_dir_path, encoding='utf-8'):
     TODO: check if it can be null in data, or it only contains the actually made reviews, and also memory consumption in this approach
     TODO: possible column data types adjustments.
     """
+    dummy_nan_value = 'NaN'
     rated_movies_file_path = osp.join(data_dir_path, 'user_ratedmovies.dat')
     rated_movies_df = pd.read_csv(rated_movies_file_path, sep='\t', usecols=['userID', 'movieID', 'rating'],
                                   encoding=encoding,
@@ -26,18 +27,18 @@ def load_hetrec_to_df(data_dir_path, encoding='utf-8'):
     movies_actors_df = movies_actors_df.groupby('movieID').agg(lambda x: x.tolist())
     hetrec_combined = rated_movies_df.join(movies_actors_df, on='movieID')
     actor_nulls_cond = pd.isnull(hetrec_combined['actorID'])
-    hetrec_combined.loc[actor_nulls_cond, 'actorID'] = [[[]] * actor_nulls_cond.sum()]
+    hetrec_combined.loc[actor_nulls_cond, 'actorID'] = dummy_nan_value
 
     movies_countries_file_path = osp.join(data_dir_path, 'movie_countries.dat')
     movies_countries_df = pd.read_csv(movies_countries_file_path, sep='\t', encoding=encoding)
     hetrec_combined = pd.merge(hetrec_combined, movies_countries_df, on='movieID', how='left')
-    hetrec_combined.loc[pd.isnull(hetrec_combined['country']), 'country'] = ''
+    hetrec_combined.loc[pd.isnull(hetrec_combined['country']), 'country'] = dummy_nan_value
 
     movies_directors_file_path = osp.join(data_dir_path, 'movie_directors.dat')
     movies_directors_df = pd.read_csv(movies_directors_file_path, sep='\t', usecols=['movieID', 'directorID'],
                                       encoding=encoding)
     hetrec_combined = pd.merge(hetrec_combined, movies_directors_df, on='movieID', how='left')
-    hetrec_combined.loc[pd.isnull(hetrec_combined['directorID']), 'directorID'] = ''
+    hetrec_combined.loc[pd.isnull(hetrec_combined['directorID']), 'directorID'] = dummy_nan_value
 
     movies_genres_file_path = osp.join(data_dir_path, 'movie_genres.dat')
     movies_genres_df = pd.read_csv(movies_genres_file_path, sep='\t', encoding=encoding)

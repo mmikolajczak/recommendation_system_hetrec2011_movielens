@@ -6,7 +6,8 @@ import pandas as pd
 def load_hetrec_to_df(data_dir_path, encoding='utf-8'):
     """
     Loads hetrec data into pandas DataFrame. Currently only minimal subset of data, containing info only about users
-    movie rating (identified by pair user_id/movie_id) is being loaded.
+    movie rating (identified by pair user_id/movie_id) is being loaded. Note that nans/empty values in general are
+    replaced with dummy const string to make later encoding easier.
     :param data_dir_path: path to the directory containing unzipped hetrec data.
     :param encoding: encoding o files in data directory. Default is utf-8, but note that hetrec data can be downloaded
     from Internet also in some ISO encoding.
@@ -50,7 +51,9 @@ def load_hetrec_to_df(data_dir_path, encoding='utf-8'):
                                                                                       'location2'], encoding=encoding)
     movies_locations_df['location'] = movies_locations_df['location1'] + ', ' + movies_locations_df['location2']
     movies_locations_df.drop(['location1', 'location2'], axis=1, inplace=True)
-    movies_locations_df = movies_locations_df.groupby('movieID').agg(lambda x: x.tolist())
+    movies_locations_df = movies_locations_df.groupby('movieID').agg(lambda x: [el for el in x.tolist() if not pd.isnull(el)])
+    movies_locations_df['location'] = movies_locations_df['location'].apply(lambda cell: list(set(cell)))
+    movies_locations_df[movies_locations_df['location'].str.len() == 0] = dummy_nan_value
     hetrec_combined = hetrec_combined.join(movies_locations_df, on='movieID')
 
     assert len(hetrec_combined) == len(rated_movies_df)

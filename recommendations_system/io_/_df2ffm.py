@@ -1,4 +1,3 @@
-import collections
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
@@ -15,27 +14,6 @@ def is_iterable(obj):
         return False
 
 
-class EmptyValueHandlingLabelEncoder(LabelEncoder):
-
-    def __init__(self, empty_value=None):
-        self._empty_value = empty_value
-        super().__init__()
-
-    def fit(self, y):
-        # assume numpy array input? how about lists? can be handled outside, and called list by list eventually
-        y = np.array(y)
-        y = y[y != self._empty_value]
-        return super().fit(y)
-
-    def transform(self, y):
-        pass
-
-    def inverse_transform(self, y):
-        pass
-
-# looks like handling it outside the actual label encoder makes more sense
-
-
 class DF2FFMConverter:
     """
     Class to converting data between pandas DataFrame and ffm format with basic, scikit-like API.
@@ -44,41 +22,50 @@ class DF2FFMConverter:
     def __init__(self):
         pass
 
-    def fit(self, X):
+    def fit(self, X, pred_type='binary', pred_field='', nan_const=np.nan):
         self._fields_map = {col: str(i) for i, col in enumerate(X.columns)}  # both fields and inner features ordered from 0
         self._fields_map_rev = {v: k for k, v in self._fields_map.items()}
         self._fields_types = {}
         self._fields_labelers = {}
-        self._empty_values = {}
+        self._pred_type = pred_type
+        self._pred_field = pred_field
+        self._nan_const = nan_const
 
         for field in X.columns:
+            if field == self._pred_field and self._pred_type == 'binary':
+                continue
             field_type = type(X.loc[0, field])
-
             if is_iterable(field_type()) and field_type != str:
                 self._fields_types[field] = 'multi_value'
-                self._empty_values[field] = field_type()
                 self._fields_labelers[field] = LabelEncoder()
-                print(len(X))
-                all_features_vector = X[X[field].isin([self._empty_values[field]])][field]
-                print(len(all_features_vector))
+                # Note: warning about scalar can can be simply ignored, it does retur bool vector instead of scalar as written
+                all_features_vector = X[~(X[field] == self._nan_const)][field]
                 all_features_vector = flatten(all_features_vector)
                 self._fields_labelers[field].fit(all_features_vector)
             else:
                 self._fields_types[field] = 'single_value'
-                self._empty_values[field] = field_type()
                 self._fields_labelers[field] = LabelEncoder()
-                all_features_vector = X[X[field].isin([self._empty_values[field]])][field]
+                try:
+                    all_features_vector = X[~(X[field] == self._nan_const)][field]
+                except TypeError:  # this means that there is not a single nan value in this column as it has other type than const
+                    all_features_vector = X[field]
                 self._fields_labelers[field].fit(all_features_vector)
-            print(field)
-            # problem 1 - types
-            # problem 2 - handling nans and other empty values
             # TODO: extend it to handle properly other iterable types?
+        #handling pred column
+
+    def _row_transform(self, row):
+        str_repr = f'{row[self._pred_field]} '
+        for k, v in self._fields_map.items():
+            if (k == self._pred_field and self._pred_type == 'binary') or row[k] == self._nan_const:  # (first term) delete it from items instead of checking?
+                continue
+            encoded_cell = self._fields_labelers[k].transform([row[k]] if self._fields_types[k] == 'single_value' else row[k])
+            encoded_cell = [f'{v}:{val}:1' for val in encoded_cell]
+            str_repr += ' '.join(encoded_cell) + ' '
+        return str_repr
 
     def transform(self, X, save_to=None):
-        X_trasformed = []
-
-        # actual processing stuff
-
+        # impossible to encode it column by column (well, maybe it can be hacked, but rather really hard way), let's see how many times row by row will take
+        X_trasformed = X.apply(self._row_transform, axis=1)
         if save_to is not None:
             with open(save_to, 'w') as f:
                 f.write('\n'.join(X_trasformed))

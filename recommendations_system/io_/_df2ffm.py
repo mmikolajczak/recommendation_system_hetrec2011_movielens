@@ -1,5 +1,12 @@
 import numpy as np
+import pandas as pd
+import dask.dataframe as dd
+from dask.multiprocessing import get as dm_get
 from sklearn.preprocessing import LabelEncoder
+import os
+import math
+import functools
+from multiprocessing import Pool
 
 
 def flatten(lst):
@@ -14,10 +21,27 @@ def is_iterable(obj):
         return False
 
 
+def wrapper(part, func):
+    return part.apply(func, axis=1)
+
+
+def parallel_apply(df, func, nb_processes):
+    chunk_size = int(math.ceil(len(df) / nb_processes))
+    partitions = [df.iloc[i: i + chunk_size] for i in range(0, len(df), chunk_size)]
+    pool = Pool(nb_processes)
+    fnc = functools.partial(wrapper, func=func)
+    res = pool.map(fnc, partitions)
+    res = pd.concat(res)
+    pool.close()
+    pool.join()
+    return res
+
+
 class DF2FFMConverter:
     """
     Class to converting data between pandas DataFrame and ffm format with basic, scikit-like API.
     """
+    PROCESSES_PER_CPU = 2
 
     def __init__(self):
         pass
@@ -30,6 +54,8 @@ class DF2FFMConverter:
         self._pred_type = pred_type
         self._pred_field = pred_field
         self._nan_const = nan_const
+        if type(X) != pd.DataFrame:
+            raise ValueError('Input must be pandas DF')
 
         for field in X.columns:
             if field == self._pred_field and self._pred_type == 'binary':
@@ -51,7 +77,6 @@ class DF2FFMConverter:
                     all_features_vector = X[field]
                 self._fields_labelers[field].fit(all_features_vector)
             # TODO: extend it to handle properly other iterable types?
-        #handling pred column
 
     def _row_transform(self, row):
         str_repr = f'{row[self._pred_field]} '
@@ -63,14 +88,31 @@ class DF2FFMConverter:
             str_repr += ' '.join(encoded_cell) + ' '
         return str_repr
 
-    def transform(self, X, save_to=None):
+    def _named_transform_apply(self, df):
+        return df.apply(self._row_transform, axis=1)
+
+    def transform(self, X, save_to=None, n_cpus=1):
+
         # impossible to encode it column by column (well, maybe it can be hacked, but rather really hard way), let's see how many times row by row will take
-        X_trasformed = X.apply(self._row_transform, axis=1)
+        if type(X) != pd.DataFrame:
+            raise ValueError('Input must be pandas DF')
+        '''
+        nb_partitions = self.PROCESSES_PER_CPU * (os.cpu_count() if n_cpus == -1 else n_cpus)
+        X = dd.from_pandas(X, npartitions=nb_partitions)
+        X_transformed = X.apply((lambda row: self._row_transform(row)), axis=1, meta={})
+        #X_transformed = X.map_partitions(lambda df: df.apply(self._row_transform, axis=1)).compute(get=dm_get)  # must be named, can't be lamba, hence one-liner (or is ti?)
+        X_transformed = X.map_partitions(lambda df: df.apply((lambda row: self._row_transform(row)), axis=1)).compute(get=dm_get)
+        #X_transformed = X.apply(self._row_transform, axis=1)
+        #X_transformed = parallel_apply(X.iloc[: 5000], , nb_processes=1).values.tolist()
+        '''
+        nb_processes = self.PROCESSES_PER_CPU * (os.cpu_count() if n_cpus == -1 else n_cpus)
+        X_transformed = parallel_apply(X.iloc[: 5000], self._row_transform, nb_processes=nb_processes)
+
         if save_to is not None:
             with open(save_to, 'w') as f:
-                f.write('\n'.join(X_trasformed))
+                f.write('\n'.join(X_transformed))
         else:
-            return X_trasformed
+            return X_transformed
 
     def inverse_transform(self, X_transformed, restore_from=None):
         pass

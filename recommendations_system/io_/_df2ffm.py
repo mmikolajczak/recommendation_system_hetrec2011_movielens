@@ -58,7 +58,7 @@ class DF2FFMConverter:
         X_transformed = DF2FFMConverter._parallel_apply(X, self._row_transform, nb_processes=nb_processes)
 
         if save_to is not None:
-            with open(save_to, 'w') as f:
+            with open(save_to, 'w', newline='\n') as f:
                 f.write('\n'.join(X_transformed))
         else:
             return X_transformed

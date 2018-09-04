@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-def load_hetrec_to_df(data_dir_path, encoding='utf-8'):
+def load_hetrec_to_df(data_dir_path, encoding='utf-8', ):
     """
     Loads hetrec data into pandas DataFrame. Currently only minimal subset of data, containing info only about users
     movie rating (identified by pair user_id/movie_id) is being loaded. Note that nans/empty values in general are

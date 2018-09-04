@@ -2,52 +2,26 @@ import natsort
 import os
 import os.path as osp
 from recommendations_system.ffm.ffm import FFM
-from sklearn.metrics import roc_auc_score, auc, roc_curve
-import matplotlib.pyplot as plt
+from sklearn.metrics import roc_auc_score
+from recommendations_system.processing_and_experiments.plotting import plot_roc_auc
 
 
 # SCRIPT CONFIG
 TRAIN_BINARY_PATH = '../../sandbox/windows_10_64_binaries/ffm-train.exe'
 PREDICT_BINARY_PATH = '../../sandbox/windows_10_64_binaries/ffm-predict.exe'
-DATA_PATH = '../../data/ffm_converted/heatrec2011_full_data_movie_id_user_id_rating_columns_cv_5'
+DATA_PATH = '../../data/ffm_converted/heatrec2011_full_data_full_columns_cv_5'
 EXPERIMENT_TYPE = 'cv_split'  # possible: cv_split, single_split
 OUTPUT_MODEL_PATH = 'model'
 
 # FITTING PARAMS
-REGULARIZATION_PARAM = 0.00004
-LATENT_FACTORS = 5
-EPOCHS = 50
-LR = 0.16
-NB_THREADS = 1
-
-
-def plot_roc_auc(y_true, y_pred, savepath=None):
-    if type(y_true) in (list, tuple) and type(y_pred) in (list, tuple):
-        assert len(y_true) == len(y_pred)
-        if len(y_true) > 5:
-            raise ValueError('Up to 5 lines supported.')
-        colors = ('b', 'g', 'c', 'm', 'y')
-        for i, (split_y_true, split_y_pred) in enumerate(zip(y_true, y_pred)):
-            fpr, tpr, threshold = roc_curve(split_y_true, split_y_pred)
-            roc_auc = auc(fpr, tpr)
-            plt.plot(fpr, tpr, label=f'Split {i}, AUC = %0.4f' % roc_auc, color=colors[i])
-    else:
-        fpr, tpr, threshold = roc_curve(y_true, y_pred)
-        roc_auc = auc(fpr, tpr)
-        plt.plot(fpr, tpr, label='AUC = %0.4f' % roc_auc)
-
-    plt.title('Receiver Operating Characteristic')
-    plt.legend(loc='lower right')
-    plt.plot([0, 1], [0, 1], 'r--')
-    plt.xlim([0, 1])
-    plt.ylim([0, 1])
-    plt.ylabel('True Positive Rate')
-    plt.xlabel('False Positive Rate')
-
-    if savepath is not None:
-        plt.savefig(savepath)
-    else:
-        plt.show()
+REGULARIZATION_PARAM = 0.0004  # bylo 4 i jedno zero w najlepszej, 5 latentow, 30 epok
+LATENT_FACTORS = 10
+EPOCHS = 1
+LR = 0.17
+NB_THREADS = 8
+# Note: in this (https://arxiv.org/pdf/1701.04099.pdf) ffm paper authors use low value of latent factors
+# (k =4 or even k=2), to reduce interference time, noting that the trade-off between performance in used metric (NLL)
+# is neglible for significant speed boost (especially that they are discussing a real-time big, production system).
 
 
 def ffm_single_split_experiment(train_binary_path, predict_binary_path, data_path, output_model_path,

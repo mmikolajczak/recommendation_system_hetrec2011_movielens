@@ -3,7 +3,7 @@ import os
 import os.path as osp
 from recommendations_system.ffm.ffm import FFM
 from sklearn.metrics import roc_auc_score
-from recommendations_system.processing_and_experiments.plotting import plot_roc_auc
+from recommendations_system.experiments_scripts.plotting import plot_roc_auc
 
 
 # SCRIPT CONFIG

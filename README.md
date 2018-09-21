@@ -29,7 +29,7 @@ Compiled binaries are later used by simple Python wrapper that can be found in <
 First thing to do is of course to clone this project to your local repository. You can do that by using following command:
 
 ```
-git clone https://github.com/https://github.com/mmikolajczak/recommendation_system_hetrec2011_movielens some_fancy_local_path
+git clone https://github.com/mmikolajczak/recommendation_system_hetrec2011_movielens some_fancy_local_path
 ```
 
 All additional packages are listed in requirements.txt and can be installed by:

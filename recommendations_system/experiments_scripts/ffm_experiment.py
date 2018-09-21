@@ -12,11 +12,12 @@ PREDICT_BINARY_PATH = '../../sandbox/windows_10_64_binaries/ffm-predict.exe'
 DATA_PATH = '../../data/ffm_converted/heatrec2011_full_data_all_columns_cv_5'
 EXPERIMENT_TYPE = 'cv_split'  # possible: cv_split, single_split
 OUTPUT_MODEL_PATH = 'model'
+AUC_VIS_PATH = 'auc_full_data_all_cols_lambda_0_0004_lf_10_epochs_65_lr_0_17.png'
 
 # FITTING PARAMS
 REGULARIZATION_PARAM = 0.0004
 LATENT_FACTORS = 10
-EPOCHS = 1
+EPOCHS = 65
 LR = 0.17
 NB_THREADS = 8
 # Note: in this (https://arxiv.org/pdf/1701.04099.pdf) ffm paper authors use low value of latent factors
@@ -24,7 +25,7 @@ NB_THREADS = 8
 # is neglible for significant speed boost (especially that they are discussing a real-time big, production system).
 
 
-def ffm_single_split_experiment(train_binary_path, predict_binary_path, data_path, output_model_path,
+def ffm_single_split_experiment(train_binary_path, predict_binary_path, data_path, output_model_path, auc_vis_path,
                                 regularization_param, latent_factors, epochs, lr, nb_threads):
     ffm = FFM(train_binary_path, predict_binary_path)
     train_ffm_path = osp.join(data_path, 'train.ffm')
@@ -36,11 +37,11 @@ def ffm_single_split_experiment(train_binary_path, predict_binary_path, data_pat
     os.remove('tmp.txt')
     auc_ = roc_auc_score(y_true, y_pred)
     print(f'Test auc: {auc_}')
-    plot_roc_auc(y_true, y_pred, savepath='roc_auc.png')
+    plot_roc_auc(y_true, y_pred, savepath=auc_vis_path)
 
 
-def ffm_cv_split_experiment(train_binary_path, predict_binary_path, data_path, output_model_path,
-                                regularization_param, latent_factors, epochs, lr, nb_threads):
+def ffm_cv_split_experiment(train_binary_path, predict_binary_path, data_path, output_model_path, auc_vis_path,
+                            regularization_param, latent_factors, epochs, lr, nb_threads):
     ffm = FFM(train_binary_path, predict_binary_path)
     splits_y_true = []
     splits_y_pred = []
@@ -58,15 +59,15 @@ def ffm_cv_split_experiment(train_binary_path, predict_binary_path, data_path, o
         splits_y_true.append(y_true)
         splits_y_pred.append(y_pred)
         splits_auc.append(auc_)
-    plot_roc_auc(splits_y_true, splits_y_pred, 'roc_auc.png')
+    plot_roc_auc(splits_y_true, splits_y_pred, auc_vis_path)
 
 
 if __name__ == '__main__':
     if EXPERIMENT_TYPE == 'single_split':
-        ffm_single_split_experiment(TRAIN_BINARY_PATH, PREDICT_BINARY_PATH, DATA_PATH, OUTPUT_MODEL_PATH,
+        ffm_single_split_experiment(TRAIN_BINARY_PATH, PREDICT_BINARY_PATH, DATA_PATH, OUTPUT_MODEL_PATH, AUC_VIS_PATH,
                                     REGULARIZATION_PARAM, LATENT_FACTORS, EPOCHS, LR, NB_THREADS)
     elif EXPERIMENT_TYPE == 'cv_split':
-        ffm_cv_split_experiment(TRAIN_BINARY_PATH, PREDICT_BINARY_PATH, DATA_PATH, OUTPUT_MODEL_PATH,
-                                    REGULARIZATION_PARAM, LATENT_FACTORS, EPOCHS, LR, NB_THREADS)
+        ffm_cv_split_experiment(TRAIN_BINARY_PATH, PREDICT_BINARY_PATH, DATA_PATH, OUTPUT_MODEL_PATH, AUC_VIS_PATH,
+                                REGULARIZATION_PARAM, LATENT_FACTORS, EPOCHS, LR, NB_THREADS)
     else:
         raise ValueError('Incorrect value in EXPERIMENT_TYPE.')

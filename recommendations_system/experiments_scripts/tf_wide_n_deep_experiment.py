@@ -14,7 +14,7 @@ HETREC_VOCABS_MAIN_DIR_PATH = '../../data/generated_categories_vocabs'
 HETREC_VOCABS_PATHS = {feature_name: osp.join(HETREC_VOCABS_MAIN_DIR_PATH, f'{feature_name}_vocab.txt')
                        for feature_name in ('users', 'movies', 'actors', 'directors', 'genres',
                                             'countries', 'locations')}
-MODEL_DIR_PATH = '../../sandbox/tf_models/test23'
+MODEL_DIR_PATH = osp.abspath('../../sandbox/tf_models/test23')  # abspath for windows issue with not working tf.saver
 
 SEED = 42
 NB_EPOCHS = 25

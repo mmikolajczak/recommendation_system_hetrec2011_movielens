@@ -9,12 +9,12 @@ from recommendations_system.experiments_scripts.plotting import plot_roc_auc
 # SCRIPT CONFIG
 TRAIN_BINARY_PATH = '../../sandbox/windows_10_64_binaries/ffm-train.exe'
 PREDICT_BINARY_PATH = '../../sandbox/windows_10_64_binaries/ffm-predict.exe'
-DATA_PATH = '../../data/ffm_converted/heatrec2011_full_data_full_columns_cv_5'
+DATA_PATH = '../../data/ffm_converted/heatrec2011_full_data_all_columns_cv_5'
 EXPERIMENT_TYPE = 'cv_split'  # possible: cv_split, single_split
 OUTPUT_MODEL_PATH = 'model'
 
 # FITTING PARAMS
-REGULARIZATION_PARAM = 0.0004  # bylo 4 i jedno zero w najlepszej, 5 latentow, 30 epok
+REGULARIZATION_PARAM = 0.0004
 LATENT_FACTORS = 10
 EPOCHS = 1
 LR = 0.17
@@ -58,7 +58,7 @@ def ffm_cv_split_experiment(train_binary_path, predict_binary_path, data_path, o
         splits_y_true.append(y_true)
         splits_y_pred.append(y_pred)
         splits_auc.append(auc_)
-    plot_roc_auc(splits_y_true, splits_y_pred, 'auc2.png')
+    plot_roc_auc(splits_y_true, splits_y_pred, 'roc_auc.png')
 
 
 if __name__ == '__main__':

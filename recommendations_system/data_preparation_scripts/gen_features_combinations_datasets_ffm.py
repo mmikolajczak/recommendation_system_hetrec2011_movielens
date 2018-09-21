@@ -5,7 +5,6 @@ another files, containing all possible feature combinations (avoiding re-generat
 import os
 import os.path as osp
 from itertools import chain, combinations
-from collections import namedtuple
 
 # SCRIPT CONFIG
 FFM_DATA_PATH = '../../data/ffm_converted/heatrec2011_full_data_movie_id_user_id_rating_columns_cv_5'
@@ -45,4 +44,3 @@ def load_ffm_cv_data(src):  # not used - too much memory required, although it's
 
 if __name__ == '__main__':
     possible_combinations = [comb for comb in powerset(range(NB_DATA_FEATURES)) if len(comb) >= MIN_FEATURES]
-

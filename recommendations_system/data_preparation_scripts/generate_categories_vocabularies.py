@@ -15,11 +15,9 @@ def generate_categories_vocab_file(series, output_path, encoding='utf-8'):
     unique = pd.unique(series).tolist()
 
     with open(output_path, 'w', encoding=encoding) as f:
-        # vocab_file.txt should contain one line for each vocabulary element (src: docs)
+        # vocab_file.txt should contain one line for each vocabulary element (src: tf docs)
         for val in unique:
             f.write(f'{val}\n')
-        # # Note: NaN - added especially to simplify work with encoders in generator
-        # f.write('NaN\n')
 
 
 def generate_hetrec_vocab_files(data_path, output_path, encoding='utf-8'):
@@ -37,4 +35,3 @@ def generate_hetrec_vocab_files(data_path, output_path, encoding='utf-8'):
 
 if __name__ == '__main__':
     generate_hetrec_vocab_files(HETREC_DATA_PATH, OUTPUT_VOCABS_PATH)
-

@@ -2,15 +2,12 @@ import os
 import os.path as osp
 import numpy as np
 import pandas as pd
-from recommendations_system.io_ import load_hetrec_to_df, load_pickle, save_pickle, load_ffm, save_ffm
+from recommendations_system.io_ import load_hetrec_to_df, save_pickle, load_ffm, save_ffm
 from sklearn.model_selection import KFold
-# Note: currently ffm split only
 
 # SCRIPT CONFIG
 NB_SPLITS = 5
 SEED = 42
-# INPUT_DATA_PATH = '../../data/ffm_converted/heatrec2011_full_data_full_columns_gen_mm.ffm'
-# OUTPUT_DATA_PATH = f'../../data/ffm_converted/heatrec2011_full_data_full_columns_cv_{NB_SPLITS}'
 INPUT_DATA_PATH = '../../data/hetrec2011-movielens-2k-v2'
 OUTPUT_DATA_PATH = f'../../data/numpy_converted/heatrec_2011_full_data_full_columns_list_nans_cv_{NB_SPLITS}'
 LIST_NAN_IN_MULTIVAL_COLS = True

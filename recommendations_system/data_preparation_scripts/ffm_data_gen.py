@@ -31,7 +31,7 @@ if __name__ == '__main__':
     converter.fit(df, pred_type='binary', pred_field='rating', nan_const='NaN')
 
     start = time.perf_counter()
-    transformed = converter.transform(df, FFM_FILE_PATH, n_cpus=-1)  # using all cpu - 20s/k, meh, hoped for a bit better results
+    transformed = converter.transform(df, FFM_FILE_PATH, n_cpus=-1)
     print(f'Data generation time: {time.perf_counter() - start}s')
 
     if SAVE_CONVERTER_PATH is not None:

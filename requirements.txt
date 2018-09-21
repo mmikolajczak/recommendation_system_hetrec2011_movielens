@@ -3,3 +3,4 @@ numpy
 scikit-learn
 natsort
 matplotlib
+tensorflow-gpu
